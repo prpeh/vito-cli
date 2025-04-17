@@ -36,8 +36,8 @@ struct TransactionData {
 
 pub async fn execute(safe: Option<String>, rpc: Option<String>, hash: Option<String>, tx_pool: Option<String>) -> Result<()> {
     // Validate and require safe address
-    let safe_address = match safe {
-        Some(addr) => Address::from_str(&addr)
+    let safe_address = match &safe {
+        Some(ref addr) => Address::from_str(addr)
             .context("Invalid Safe wallet address format")?,
         None => bail!("Safe address is required. Use --safe flag or set it globally.")
     };
