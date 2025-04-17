@@ -34,10 +34,16 @@ struct TransactionData {
     signatures: Vec<String>,
 }
 
-pub async fn execute(safe: String, rpc: Option<String>, hash: Option<String>, tx_pool: Option<String>) -> Result<()> {
-    // Validate safe address
-    let safe_address = Address::from_str(&safe)
-        .context("Invalid Safe wallet address format")?;
+pub async fn execute(safe: Option<String>, rpc: Option<String>, hash: Option<String>, tx_pool: Option<String>) -> Result<()> {
+    // Clone the safe value early to avoid ownership issues
+    let safe_str = safe.clone().unwrap_or_else(|| "unknown".to_string());
+
+    // Validate and require safe address
+    let safe_address = match &safe {
+        Some(ref addr) => Address::from_str(addr)
+            .context("Invalid Safe wallet address format")?,
+        None => bail!("Safe address is required. Use --safe flag or set it globally.")
+    };
 
     // Use the provided RPC or the default mainnet RPC
     let rpc_url = rpc.unwrap_or_else(|| {
@@ -101,7 +107,7 @@ pub async fn execute(safe: String, rpc: Option<String>, hash: Option<String>, tx
         let hash = H256::from_str(&tx_hash)
             .context("Invalid transaction hash format")?;
         
-        println!("Fetching transaction with hash {} for Safe {}", tx_hash, safe);
+        println!("Fetching transaction with hash {} for Safe {}", tx_hash, safe_str);
         
         // Fetch the transaction details from the Safe transaction pool
         let tx_details = match contract.get_tx_details(hash.into()).call().await {
@@ -145,7 +151,7 @@ pub async fn execute(safe: String, rpc: Option<String>, hash: Option<String>, tx
         // Convert transaction to JSON and print it
         println!("{}", serde_json::to_string_pretty(&tx_data).unwrap());
     } else {
-        println!("Fetching all pending transactions for Safe {}", safe);
+        println!("Fetching all pending transactions for Safe {}", safe_str);
         
         // Get all pending transaction hashes for the Safe
         // The contract doesn't paginate, just returns all hashes at once
@@ -162,7 +168,7 @@ pub async fn execute(safe: String, rpc: Option<String>, hash: Option<String>, tx
             .collect();
         
         if all_tx_hashes.is_empty() {
-            println!("No pending transactions found for Safe {}", safe);
+            println!("No pending transactions found for Safe {}", safe_str);
             return Ok(());
         }
         
