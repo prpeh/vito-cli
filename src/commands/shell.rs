@@ -15,11 +15,11 @@ fn shorten_address(address: &str) -> String {
     }
 }
 
-pub async fn execute() -> Result<()> {
+pub async fn execute(safe: Option<String>) -> Result<()> {
     println!("Welcome to Vito CLI interactive mode. Type 'help' for available commands or 'exit' to quit.");
     
-    // Try to get the safe from environment if it's not already set
-    let mut current_safe = env::var("SAFE_ADDRESS").ok();
+    // Use the provided safe address or start with none
+    let mut current_safe = safe;
     if let Some(ref safe) = current_safe {
         println!("Current Safe address: {}", safe);
     } else {

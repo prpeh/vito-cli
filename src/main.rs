@@ -50,14 +50,15 @@ async fn main() -> Result<()> {
     match cli.command {
         Some(Commands::Tx { hash, tx_pool }) => {
             // Pass the safe address from the top-level CLI
-            commands::tx::execute(cli.safe, rpc, hash, tx_pool).await?;
+            commands::tx::execute(cli.safe.clone(), rpc, hash, tx_pool).await?;
         },
         Some(Commands::Shell) => {
-            commands::shell::execute().await?;
+            // Pass the safe address to the shell
+            commands::shell::execute(cli.safe.clone()).await?;
         },
         None => {
             // No command provided, start interactive mode by default
-            commands::shell::execute().await?;
+            commands::shell::execute(cli.safe).await?;
         }
     }
     
