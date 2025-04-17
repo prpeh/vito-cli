@@ -35,6 +35,9 @@ struct TransactionData {
 }
 
 pub async fn execute(safe: Option<String>, rpc: Option<String>, hash: Option<String>, tx_pool: Option<String>) -> Result<()> {
+    // Clone the safe value early to avoid ownership issues
+    let safe_str = safe.clone().unwrap_or_else(|| "unknown".to_string());
+
     // Validate and require safe address
     let safe_address = match &safe {
         Some(ref addr) => Address::from_str(addr)
@@ -104,7 +107,7 @@ pub async fn execute(safe: Option<String>, rpc: Option<String>, hash: Option<Str
         let hash = H256::from_str(&tx_hash)
             .context("Invalid transaction hash format")?;
         
-        println!("Fetching transaction with hash {} for Safe {}", tx_hash, safe.unwrap_or_else(|| "unknown".to_string()));
+        println!("Fetching transaction with hash {} for Safe {}", tx_hash, safe_str);
         
         // Fetch the transaction details from the Safe transaction pool
         let tx_details = match contract.get_tx_details(hash.into()).call().await {
@@ -148,7 +151,7 @@ pub async fn execute(safe: Option<String>, rpc: Option<String>, hash: Option<Str
         // Convert transaction to JSON and print it
         println!("{}", serde_json::to_string_pretty(&tx_data).unwrap());
     } else {
-        println!("Fetching all pending transactions for Safe {}", safe.unwrap_or_else(|| "unknown".to_string()));
+        println!("Fetching all pending transactions for Safe {}", safe_str);
         
         // Get all pending transaction hashes for the Safe
         // The contract doesn't paginate, just returns all hashes at once
@@ -165,7 +168,7 @@ pub async fn execute(safe: Option<String>, rpc: Option<String>, hash: Option<Str
             .collect();
         
         if all_tx_hashes.is_empty() {
-            println!("No pending transactions found for Safe {}", safe.unwrap_or_else(|| "unknown".to_string()));
+            println!("No pending transactions found for Safe {}", safe_str);
             return Ok(());
         }
         
