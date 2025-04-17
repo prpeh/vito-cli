@@ -20,11 +20,11 @@ pub async fn execute(safe: Option<String>) -> Result<()> {
     println!("Welcome to Vito CLI interactive mode. Type 'help' for available commands or 'exit' to quit.");
     
     // Use the provided safe address or start with none
-    let mut current_safe = safe;
+    let current_safe = safe;
     if let Some(ref safe) = current_safe {
         println!("Current Safe address: {}", safe);
     } else {
-        println!("No Safe address set. Use 'safe <address>' to set it.");
+        println!("{}", "No Safe address set. Please restart with --safe <address> option.".red());
     }
     
     // Get RPC URL from environment
@@ -68,15 +68,7 @@ pub async fn execute(safe: Option<String>) -> Result<()> {
                         // Do nothing for empty command
                     },
                     _ => {
-                        if command.starts_with("safe ") {
-                            let addr = command[5..].trim();
-                            if !addr.is_empty() {
-                                current_safe = Some(addr.to_string());
-                                println!("Safe address set to: {}", addr.green());
-                            } else {
-                                println!("{}", "Please provide a Safe address".red());
-                            }
-                        } else if command.starts_with("tx ") {
+                        if command.starts_with("tx ") {
                             if let Some(ref safe) = current_safe {
                                 println!("Transaction command for Safe {}: {}", 
                                     safe.green(), 
@@ -84,7 +76,7 @@ pub async fn execute(safe: Option<String>) -> Result<()> {
                                 // Here you would parse and execute the tx command
                                 // This is a placeholder - you'll implement the actual parsing logic
                             } else {
-                                println!("{}", "Error: No Safe address set. Use 'safe <address>' first.".red());
+                                println!("{}", "Error: No Safe address provided. Please restart with --safe <address> option.".red());
                             }
                         } else {
                             println!("{}: {}. Type 'help' for available commands.", 
@@ -114,7 +106,6 @@ pub async fn execute(safe: Option<String>) -> Result<()> {
 
 fn display_help() {
     println!("{}", "Available commands:".bright_green());
-    println!("  {} - Set the Ethereum Safe wallet address (0x...)", "safe <addr>".yellow());
     println!("  {} - Manage transactions (use 'tx --help' for more info)", "tx <args>".yellow());
     println!("  {} - Show this help message", "help".yellow());
     println!("  {} - Exit interactive mode", "exit".yellow());
