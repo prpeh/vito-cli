@@ -15,7 +15,7 @@ mod config;
 )]
 struct Cli {
     #[command(subcommand)]
-    command: Commands,
+    command: Option<Commands>,
 }
 
 #[derive(Subcommand)]
@@ -38,6 +38,9 @@ enum Commands {
         #[arg(long)]
         tx_pool: Option<String>,
     },
+    
+    /// Start interactive shell mode
+    Shell,
 }
 
 #[tokio::main]
@@ -45,8 +48,15 @@ async fn main() -> Result<()> {
     let cli = Cli::parse();
     
     match cli.command {
-        Commands::Tx { safe, rpc, hash, tx_pool } => {
+        Some(Commands::Tx { safe, rpc, hash, tx_pool }) => {
             commands::tx::execute(safe, rpc, hash, tx_pool).await?;
+        },
+        Some(Commands::Shell) => {
+            commands::shell::execute().await?;
+        },
+        None => {
+            // No command provided, start interactive mode by default
+            commands::shell::execute().await?;
         }
     }
     
