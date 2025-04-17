@@ -4,6 +4,17 @@ use rustyline::DefaultEditor;
 use anyhow::Result;
 use std::env;
 
+// Helper function to shorten an Ethereum address
+fn shorten_address(address: &str) -> String {
+    if address.len() >= 10 {
+        let prefix = &address[0..6];  // 0x1234
+        let suffix = &address[address.len() - 4..];  // abcd
+        format!("{}...{}", prefix, suffix)
+    } else {
+        address.to_string()
+    }
+}
+
 pub async fn execute() -> Result<()> {
     println!("Welcome to Vito CLI interactive mode. Type 'help' for available commands or 'exit' to quit.");
     
@@ -25,8 +36,14 @@ pub async fn execute() -> Result<()> {
     
     let mut rl = DefaultEditor::new()?;
     loop {
+        // Create prompt based on whether a safe address is set
+        let prompt = match current_safe {
+            Some(ref safe) => format!("{} vito> ", shorten_address(safe)),
+            None => "vito> ".to_string(),
+        };
+        
         // Display prompt and get input
-        let readline = rl.readline("vito > ");
+        let readline = rl.readline(&prompt);
         
         match readline {
             Ok(line) => {
