@@ -3,6 +3,7 @@ use rustyline::{error::ReadlineError, Editor};
 use rustyline::DefaultEditor;
 use anyhow::Result;
 use std::env;
+use colored::*;
 
 // Helper function to shorten an Ethereum address
 fn shorten_address(address: &str) -> String {
@@ -38,7 +39,10 @@ pub async fn execute(safe: Option<String>) -> Result<()> {
     loop {
         // Create prompt based on whether a safe address is set
         let prompt = match current_safe {
-            Some(ref safe) => format!("{} vito> ", shorten_address(safe)),
+            Some(ref safe) => {
+                let addr_part = shorten_address(safe).dimmed().to_string();
+                format!("{} vito> ", addr_part)
+            },
             None => "vito> ".to_string(),
         };
         
@@ -68,20 +72,24 @@ pub async fn execute(safe: Option<String>) -> Result<()> {
                             let addr = command[5..].trim();
                             if !addr.is_empty() {
                                 current_safe = Some(addr.to_string());
-                                println!("Safe address set to: {}", addr);
+                                println!("Safe address set to: {}", addr.green());
                             } else {
-                                println!("Please provide a Safe address");
+                                println!("{}", "Please provide a Safe address".red());
                             }
                         } else if command.starts_with("tx ") {
                             if let Some(ref safe) = current_safe {
-                                println!("Transaction command for Safe {}: {}", safe, &command[3..]);
+                                println!("Transaction command for Safe {}: {}", 
+                                    safe.green(), 
+                                    command[3..].bright_white());
                                 // Here you would parse and execute the tx command
                                 // This is a placeholder - you'll implement the actual parsing logic
                             } else {
-                                println!("Error: No Safe address set. Use 'safe <address>' first.");
+                                println!("{}", "Error: No Safe address set. Use 'safe <address>' first.".red());
                             }
                         } else {
-                            println!("Unknown command: {}. Type 'help' for available commands.", command);
+                            println!("{}: {}. Type 'help' for available commands.", 
+                                "Unknown command".red(), 
+                                command.yellow());
                         }
                     }
                 }
@@ -105,9 +113,9 @@ pub async fn execute(safe: Option<String>) -> Result<()> {
 }
 
 fn display_help() {
-    println!("Available commands:");
-    println!("  safe <addr> - Set the Ethereum Safe wallet address (0x...)");
-    println!("  tx <args>   - Manage transactions (use 'tx --help' for more info)");
-    println!("  help        - Show this help message");
-    println!("  exit        - Exit interactive mode");
+    println!("{}", "Available commands:".bright_green());
+    println!("  {} - Set the Ethereum Safe wallet address (0x...)", "safe <addr>".yellow());
+    println!("  {} - Manage transactions (use 'tx --help' for more info)", "tx <args>".yellow());
+    println!("  {} - Show this help message", "help".yellow());
+    println!("  {} - Exit interactive mode", "exit".yellow());
 } 
