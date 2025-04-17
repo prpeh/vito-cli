@@ -1,5 +1,6 @@
 use clap::{Parser, Subcommand};
 use anyhow::Result;
+use std::env;
 
 mod commands;
 mod config;
@@ -14,6 +15,10 @@ mod config;
     long_about = "A feature-rich command-line interface tool designed to help you interact with Ethereum Safe wallets."
 )]
 struct Cli {
+    /// Ethereum Safe wallet address (0x...)
+    #[arg(short, long)]
+    safe: Option<String>,
+
     #[command(subcommand)]
     command: Option<Commands>,
 }
@@ -22,14 +27,6 @@ struct Cli {
 enum Commands {
     /// Fetch transaction data from Safe transaction pool
     Tx {
-        /// Ethereum Safe wallet address (0x...)
-        #[arg(short, long)]
-        safe: String,
-
-        /// Provider RPC URL (http:// or https://) - Optional, defaults to Ethereum mainnet
-        #[arg(short, long)]
-        rpc: Option<String>,
-
         /// Transaction hash (0x...) - Optional
         #[arg(short = 't', long)]
         hash: Option<String>,
@@ -47,9 +44,13 @@ enum Commands {
 async fn main() -> Result<()> {
     let cli = Cli::parse();
     
+    // Get RPC URL from environment variables
+    let rpc = env::var("RPC_URL").ok();
+    
     match cli.command {
-        Some(Commands::Tx { safe, rpc, hash, tx_pool }) => {
-            commands::tx::execute(safe, rpc, hash, tx_pool).await?;
+        Some(Commands::Tx { hash, tx_pool }) => {
+            // Pass the safe address from the top-level CLI
+            commands::tx::execute(cli.safe, rpc, hash, tx_pool).await?;
         },
         Some(Commands::Shell) => {
             commands::shell::execute().await?;
